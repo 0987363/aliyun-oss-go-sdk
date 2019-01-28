@@ -123,13 +123,9 @@ func (bucket Bucket) DoPutObject(request *PutObjectRequest, options []Option) (*
 // io.ReadCloser    reader instance for reading data from response. It must be called close() after the usage and only valid when error is nil.
 // error    it's nil if no error, otherwise it's an error object.
 //
-func (bucket Bucket) GetObject(objectKey string, options ...Option) (io.ReadCloser, error) {
+func (bucket Bucket) GetObject(objectKey string, options ...Option) (*Response, error) {
 	result, err := bucket.DoGetObject(&GetObjectRequest{objectKey}, options)
-	if err != nil {
-		return nil, err
-	}
-
-	return result.Response, nil
+	return result.Response, err
 }
 
 // GetObjectToFile downloads the data to a local file.
@@ -194,7 +190,9 @@ func (bucket Bucket) DoGetObject(request *GetObjectRequest, options []Option) (*
 	params, _ := getRawParams(options)
 	resp, err := bucket.do("GET", request.ObjectKey, params, options, nil, nil)
 	if err != nil {
-		return nil, err
+		return &GetObjectResult{
+			Response: resp,
+		}, err
 	}
 
 	result := &GetObjectResult{

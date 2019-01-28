@@ -117,15 +117,15 @@ func downloadWorker(id int, arg downloadWorkerArg, jobs <-chan downloadPart, res
 			failed <- err
 			break
 		}
-		defer rd.Close()
+		defer rd.Body.Close()
 
 		var crcCalc hash.Hash64
 		if arg.enableCRC {
 			crcCalc = crc64.New(crcTable())
 			contentLen := part.End - part.Start + 1
-			rd = ioutil.NopCloser(TeeReader(rd, crcCalc, contentLen, nil, nil))
+			rd.Body = ioutil.NopCloser(TeeReader(rd.Body, crcCalc, contentLen, nil, nil))
 		}
-		defer rd.Close()
+		defer rd.Body.Close()
 
 		select {
 		case <-die:
@@ -146,7 +146,7 @@ func downloadWorker(id int, arg downloadWorkerArg, jobs <-chan downloadPart, res
 			break
 		}
 
-		_, err = io.Copy(fd, rd)
+		_, err = io.Copy(fd, rd.Body)
 		if err != nil {
 			fd.Close()
 			failed <- err
